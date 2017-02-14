@@ -59,8 +59,86 @@ install I did
 - Nothing too crazy was done in L40; I generally understand what he's doing.  As just a reminder,
 we haven't actually set anything up or passed in props to the BookList.  So when he's typing
 `this.props.books.map`, he's doing that with the knowledge that we WILL want to do that.
+- L41
+- a container is just a component that has direct access to state within redux
+- in general, we want the most parent component that cares about a particular piece of state to be a
+container
+- L42
+- to form a component between react and redux, we use react-redux library
+- to make that connection, we had to bring the connect property:
+`import { connect } from 'react-redux';`
+- So make this a container, simply doing what Stephen does in L42 is not enough.  In the starter pack, 
+he did a few things for me already that I had to go back and troubleshoot but let's start with BookList.
+How do I make a component into a container?
 
-- Start on L41
+```javascript
+import React, {Component } from 'react';
+import { connect } from 'react-redux'; // NEW
 
+// removed the 'export default' to the bottom
+class BookList extends Component {
+  renderList() {
+    return this.props.books.map((book) => {
+      return (
+        <li key={book.title} className="list-group-item">{book.title}</li>
+      );
 
+    });
+  }
+
+  render() {
+    return (
+      <ul className="list-group col-sm-4">
+        {this.renderList()}
+      </ul>
+    )
+  }
+}
+// added my mapStateToProps function
+function mapStateToProps(state) {
+  return {
+    books: state.books
+  }
+}
+// I am no longer just exporting the component, I am exporting the component connected to state
+export default connect(mapStateToProps)(BookList)
+```
+- First, I had to import connect from react-redux; that's probably pretty standard
+- Next, because I will no longer just be exporting BookList so I removed 'export default'
+- I wrote my mapStateToProps function.  This function takes one argument, state.  To be more specific, 
+it takes ALL of state...that means it takes the ENTIRE global state object and it is peeling off just the
+bit that I need.
+  - As I can see in my return statement in renderList(), I need to a books property.  So I already know what
+  the key of my object I'm returning is.
+  - As for the value, I know that I want the list of books in state so state.books.
+- Lastly, I need to export my component connected to state which I did using the connect function which takes
+my mapStateToProps function and then right next to it my component, BookList
+- At this point, it still doesn't work, I didn't have some of Grider's starter code so in my index.js file, I had 
+to do a few things.
+  - Proper imports at the top:
+
+  ```javascript
+  import { Provider } from 'react-redux'; // NEW
+  import { createStore, applyMiddleware } from 'redux'; //NEW
+
+  import App from './App';
+  import reducers from './reducers'; // NEW
+  ```
+  - The next two parts I'll wrap into one because I don't entirely understand them:
+
+  ```javascript
+  const createStoreWithMiddleware = applyMiddleware()(createStore);
+
+  ReactDOM.render(
+    <Provider store={createStoreWithMiddleware(reducers)}>
+      <App />
+    </Provider>,
+    document.getElementById('root')
+  );
+  ```
+  - first, he creates a constant that calls whatever applyMiddleware() does and connects it somehow to
+  createStore
+  - Next, you can see that we wrap our `<App />` element in `<Provider />` tags, with the store be passed
+  the constant we created and our reducers.
+  - **I need to revisit this and understand this setup part which we may address in a different app.**
 
