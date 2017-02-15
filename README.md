@@ -252,6 +252,161 @@ that we received, a book object, but it also has a `type` property with a string
 - Start L47 next and when complete, run through these notes and summarize connecting my 
 component to state, connecting my action to my container, and how we created the action.
 
+- L47: we wrote the active_book reducer
+
+## Lecture 48: Consuming Actions in Reducers Continued
+- I built the basic structure for my BookDetail component.  Here it is (nothing new):
+
+```javascript
+import React, { Component } from 'react';
+
+export default class BookDetail extends Component {
+
+  render() {
+    return (
+      <div>Book Details!</div>
+    )
+  }
+}
+```
+- Now let's see how it changes so that I can hook it up to Redux:
+
+```javascript
+import React, { Component } from 'react';
+import { connect } from 'react-redux';
+
+class BookDetail extends Component {
+
+  render() {
+    return (
+      <div>Book Details!</div>
+    )
+  }
+}
+
+function mapStateToProps(state) {
+  return {
+    book: state.activeBook
+  }
+}
+
+export default connect(mapStateToProps)(BookDetail)
+```
+- So what did we do??
+  - We imported the connect function from React-Redux
+  - We defined our mapStateToProps function which takes one argument, state (our GLOBAL state), and peels
+  off the bit that we need, activeBook, and puts it in a property that we can access through our `props`
+  in the BookDetail component as `book`
+  - We exported our connected component (now a 'container') by calling the connect function and passing it
+  the mapStateToProps function and our component.
+- This is how we connect our component to Redux; we haven't brought in the action yet...I'm sure we do that
+next.
+
+## Lecture 49: Conditional Rendering
+
+## Lecture 50: Reducers and Actions Review
+- Redux is charge of managing our application state
+- State is a single, plain JS object
+- component state is different than application state
+- Our component state is COMPLETELY separate from our application state
+- Our application state is formed by our reducers
+- Reducers get tied together with this combinedReducers function
+- Each key gets assigned one reducer
+- Our reducers are in charge of changing state over time and they do that through the use of actions
+- Each Reducer has the option to return a different piece of state based on the type of action received
+- Action creators are just simple functions that return an action
+- Actions are JS objects that must have a type defined and they can optionally have a payload or other 
+properties; payload is just convention
+- Application Operation:
+  - When a user clicks on something, it calls an action creator: `onClick={() => this.props.selectBook(book) }`
+  from BookList
+    - we can call selectBook from props because of our `mapDispatchToProps` function that we've defined
+    at the bottom of BookList
+  - The action creator, which takes in an object, `book`, and returns an object that contains the type of
+  the action and a payload, which in this case, is the book itself.
+    - how did we know that we wanted to take in the ENTIRE book?  Can we theoretically pass in anything there, 
+    not just a JS object?
+  - That action is automatically sent to all of our different reducers.  And for the reducers that cared
+  about that particular action, it returns a piece of state which represents part of the global state.
+  - A new global state is assembled which then notifies the containers of the change which causes them
+  to rerender with new props.
+
+## CM Summary
+- I am trying to distill all of this into a few simple steps that I could follow that would allow me
+to get up and running quickly with a react app that has Redux-managed state.  These are the basics
+steps:
+  1. Project setup and dependencies
+  ```sh
+  create-react-app app_name
+  cd app_name
+  npm install --save redux
+  npm install --save react-redux
+  ```
+  2. Bring in Redux to index.js
+    - to bring in Redux, I need to wrap my `<App />` component in `<Provider>` tags.
+    - I also need to create a `store` for Redux and then pass that `store` as prop to my `<Provider>`
+    - My store takes an argument, my rootReducer.  Grider's boilerplate doesn't make this as obvious but
+    what is happening is that all the reducers are being combined in my `/reducers/index.js` file.  It is
+    being imported into my `/src/index.js` file as just 'reducers' because my app knows that if it goes 
+    to the reducers directory and no file is specified, just grab the `index.js` file.  In that file, I am
+    exporting rootReducer.
+  3. Writing Reducers
+    - Reducers are functions so I can start most with `export default function(){ ...`
+    - My rootReducer combines them all to create my state.  Each reducer gets its own key with the value
+    being whatever is returned by the reducer
+    - When writing a reducer, the function typically takes two arguments: the piece of state that it is
+    responsible for, and the action.  It looks like it is best practice to just default the state to null
+    in case state is undefined => `export default function(state = null, action) {`
+    - Reducers typically use switch statements which determine what the reducer returns based on the type
+    of action, `action.type`.  Remember, the action will run through ALL reducers so if the action type
+    does not apply, you can simply return state.
+  4. Promoting Components to Containers
+    - It seems like it'd be best to start writing the component like normal (class-based component) and 
+    then add the Redux...so first step, write the class-based component.
+    - import connect from React-redux
+    - write the mapStateToProps function to map the piece of state that you want to a property that you
+    can access as 'props' or `this.props.property` in your component
+    - export not just your component but your CONNECTED component by doing: 
+    `export default connect(mapStateToProps)(BookList)`
+  5. Write Your Action
+    - Now that you have your container, what do you want your action to do?  How do you want it to be
+    activated?  I don't know exactly the appropriate order in which I'd figure this out but for this app, 
+    I know that when the user clicks on a book, I want to show them the details of the book in another 
+    component.  So when they click on a book, we will change the activeBook property of our global state.
+      - Action creators produce actions, so what do I want my action to have?  It must have a type but
+      why is my payload the entire book object?  I guess that's arbitrary and given how small a book 
+      object is, it probably doesn't matter, so I'll just have my action creator receive the entire book
+      object and return a new object that contains the type and then the entire book.
+      - As a reminder, I already wrote my reducer to return action.payload if my type matches so I already
+      know what I want to return.  So it sounds like the reducer and action creators are written in tandem.
+      Action creators always create actions, which are objects.  Reducers receive state (not GLOBAL state)
+      and the action, which is an object.  
+      - All of my reducers are brought together in my rootReducer which is just the combination of all 
+      of them, with each reducer being assigned a key.  So in my global state, my `state.books` is just
+      my array of books from my books reducer, my `state.activeBook` is just the return of my ActiveBook
+      reducer.
+      - With this knowledge, I can move on...
+  6. Bring Action into Container
+    - First, import my action (file location) AND the bindActionCreators function from Redux.
+    - Write the mapDispatchToProps that allows me to call the selectBook function through my props in 
+    my component.  So notice that I'm not passing props down the normal way, that's what this function
+    is doing for me.
+      - my mapDispatchToProps takes one argument, dispatch, and it returns my bindActionCreators that
+      takes two arguments: on object containing my action as a key-value pair, `{selectBook : selectBook}`, 
+      and the function dispatch.
+      - I still need to better understand this part but there is some good info in the React-Redux docs
+    - Lastly, add my mapDispatchToProps to my connect function as the second argument.  If you look at the
+    docs, the connect function takes a number of arguments with mapStateToProps as always the first, 
+    mapDispatchToProps as always the second, and then some others.
+  7. Add Action to Event Handler
+    - Now I just need to add my selectBook action creator, a function, to an event handler of my choosing
+    which, as I've already said, will be onClick: `onClick={() => this.props.selectBook(book) }`
+    - At this point, I should have an app that when a user clicks on a book, the activeBook property of my
+    state should change to whatever I clicked.  It is now MY responsibility to use that information somewhere,
+    for example, change the information that is displayed by creating my BookDetails component.
+  
+
+
 
 
 

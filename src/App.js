@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import BookList from './containers/book-list';
+import BookDetail from './containers/book-details';
 
 import './App.css';
 
@@ -8,6 +9,7 @@ class App extends Component {
     return (
     	<div >
       		<BookList />
+      		<BookDetail />
     	</div>
     );
   }
