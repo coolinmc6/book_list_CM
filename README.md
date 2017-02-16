@@ -405,6 +405,52 @@ steps:
     state should change to whatever I clicked.  It is now MY responsibility to use that information somewhere,
     for example, change the information that is displayed by creating my BookDetails component.
   
+## Publishing to GH-Pages
+
+### Step 1: Add `homepage` to `package.json`
+
+```js
+  "homepage": "https://myusername.github.io/my-app",
+```
+
+### Step 2: Install `gh-pages` and add `deploy` to `scripts` in `package.json`
+
+```sh
+npm install --save-dev gh-pages
+```
+
+- Add the following scripts in your `package.json`:
+
+```js
+  // ...
+  "scripts": {
+    // ...
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
+  }
+```
+### Step 3: Deploy the site by running `npm run deploy`
+
+- Then run:
+
+```sh
+npm run deploy
+```
+
+### Step 4: Ensure your project's settings use `gh-pages`
+
+Finally, make sure **GitHub Pages** option in your GitHub project settings is set to use the `gh-pages` branch:
+
+<img src="http://i.imgur.com/HUjEr9l.png" width="500" alt="gh-pages branch setting">
+
+### Troubleshooting
+- The one error that I kept getting was often after a failed deploy because of password reasons that said 
+that a gh-pages branch already existed.  Run this to remove it:
+```sh
+rm -rf node_modules/gh-pages/.cache
+# after you delete the cash, deploy it again:
+npm run deploy
+```
 
 
 
